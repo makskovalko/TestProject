@@ -17,7 +17,9 @@ protocol SearchViewModelOperations {
     var count: Int { get }
     
     mutating func loadDataArray()
-    mutating func performSearch(searchText: String)
+    
+    mutating func performSearch(searchText: String,
+                                completion: Optional<() -> ()>)
     
     func resetSearch()
     func showMapView(forIndex index: Int, presentationContext: SearchView)
@@ -52,8 +54,12 @@ struct SearchViewModel: SearchViewModelOperations {
         searchWorker.loadDataSource()
     }
     
-    mutating func performSearch(searchText: String) {
-        searchWorker.performSearch(searchText: searchText)
+    mutating func performSearch(searchText: String,
+                                completion: Optional<() -> ()>) {
+        searchWorker.performSearch(
+            searchText: searchText,
+            completion: completion
+        )
     }
     
     func resetSearch() { searchWorker.resetSearch() }

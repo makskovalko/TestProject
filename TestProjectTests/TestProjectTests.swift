@@ -65,12 +65,24 @@ class TestProjectTests: XCTestCase {
             )
         )
         
-        searchWorker.dataSource = testDataSource
-        searchWorker.performSearch(searchText: "Ala")
+        searchWorker.dataSource = testDataSource |> searchWorker.sorted
+        
+        var searchExpectation = expectation(description: "Perform search")
+        searchWorker.performSearch(searchText: "Ala") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
         
         XCTAssertEqual(searchWorker.searchResult.count, 2)
+        XCTAssertTrue(searchWorker.searchResult.first?.country == "US")
         
-        searchWorker.performSearch(searchText: "Ams")
+        searchExpectation = expectation(description: "Perform search")
+        searchWorker.performSearch(searchText: "Ams") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
         XCTAssertTrue(searchWorker.searchResult.first?.country == "NL")
         
         searchWorker.dataSource = [
@@ -94,14 +106,23 @@ class TestProjectTests: XCTestCase {
                      country: "US",
                      name: "Arizona",
                      coord: .init(lon: 0, lat: 0))
-        ]
+        ] |> searchWorker.sorted
         
-        searchWorker.performSearch(searchText: "A")
+        searchExpectation = expectation(description: "Perform search")
+        searchWorker.performSearch(searchText: "A") {
+            searchExpectation.fulfill()
+        }
         
+        wait(for: [searchExpectation], timeout: 0.1)
         XCTAssertTrue(searchWorker.searchResult.last?.country == "AU")
         XCTAssertEqual(searchWorker.searchResult.count, 5)
         
-        searchWorker.performSearch(searchText: "S")
+        searchExpectation = expectation(description: "Perform search")
+        searchWorker.performSearch(searchText: "S") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
         XCTAssertEqual(searchWorker.searchResult.count, 1)
         XCTAssertTrue(searchWorker.searchResult.last?.country == "AU")
     }
@@ -119,15 +140,33 @@ class TestProjectTests: XCTestCase {
             router: SearchRouter<SearchView>()
         )
         
-        viewModel.performSearch(searchText: "Ams")
-        XCTAssertTrue(viewModel.searchResult.isEmpty)
+        var searchExpectation = expectation(description: "Perform search")
         
+        viewModel.performSearch(searchText: "Ams") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
+        
+        XCTAssertTrue(viewModel.searchResult.isEmpty)
         searchWorker.dataSource = testDataSource
-        viewModel.performSearch(searchText: "Ams")
+        
+        searchExpectation = expectation(description: "Perform search")
+        viewModel.performSearch(searchText: "Ams") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
         XCTAssertFalse(viewModel.searchResult.isEmpty)
         
         XCTAssertEqual(searchWorker.searchResult.count, viewModel.count)
-        viewModel.performSearch(searchText: "London")
+        
+        searchExpectation = expectation(description: "Perform search")
+        viewModel.performSearch(searchText: "London") {
+            searchExpectation.fulfill()
+        }
+        
+        wait(for: [searchExpectation], timeout: 0.1)
         XCTAssertTrue(viewModel.searchResult.isEmpty)
     }
 }

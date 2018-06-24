@@ -19,7 +19,8 @@ protocol SearchOperations {
     init(loader: DataSourceLoader)
     
     func loadDataSource()
-    func performSearch(searchText: String)
+    func performSearch(searchText: String, completion: Optional<() -> ()>)
+    
     func resetSearch()
     func sorted(dataSource: [DataSource]) -> [DataSource]
 }
@@ -41,24 +42,47 @@ final class SearchWorker: SearchOperations {
         self.searchResult = dataSource
     }
     
-    func performSearch(searchText: String) {
+    func performSearch(searchText: String,
+                       completion: Optional<() -> ()>) {
         guard !searchText.isEmpty else {
             resetSearch()
             return
         }
         
-        searchResult = dataSource
-            .filter { $0.name.hasPrefix(searchText)
-                || $0.country.hasPrefix(searchText) }
-            |> sorted
+        execute(on: .global()) {
+            let searchResult = self.getSearchResults(text: searchText)
+            execute(on: .main) {
+                self.searchResult = searchResult
+                completion?()
+            }
+        }
     }
     
     func resetSearch() { searchResult = dataSource }
     
     func sorted(dataSource: [CityData]) -> [CityData] {
-        return dataSource.sorted { $0.name != $1.name
-            ? $0.name < $1.name
-            : $0.country < $1.country
+        return dataSource.sorted {
+            $0.name != $1.name
+                ? $0.name < $1.name
+                : $0.country < $1.country
         }
+    }
+}
+
+private extension SearchWorker {
+    func getSearchResults(text: String) -> [CityData] {
+        let (cities, countries) = (
+            dataSource.filter {
+                $0.name
+                    .lowercased()
+                    .hasPrefix(text.lowercased())
+            },
+            dataSource.filter {
+                $0.country
+                    .lowercased()
+                    .hasPrefix(text.lowercased())
+            }
+        )
+        return cities + countries
     }
 }

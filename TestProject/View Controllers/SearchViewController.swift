@@ -51,6 +51,8 @@ class SearchViewController: UIViewController, SearchView {
     private func configureSearchBar() {
         searchBar.delegate = self
     }
+    
+    func updateUIState() { tableView.reloadData() }
 
 }
 
@@ -84,6 +86,8 @@ extension SearchViewController: UITableViewDelegate {
 
 extension SearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        viewModel.performSearch(searchText: searchText)
+        viewModel.performSearch(searchText: searchText) { [weak self] in
+            self?.updateUIState()
+        }
     }
 }
