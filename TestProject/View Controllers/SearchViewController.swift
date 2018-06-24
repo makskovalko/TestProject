@@ -8,19 +8,6 @@
 
 import UIKit
 
-//MARK: - UI State
-
-extension SearchViewController {
-    enum State {
-        case initial
-        case search([CityData])
-        
-        mutating func change(on state: State) {
-            self = state
-        }
-    }
-}
-
 protocol SearchView {
     var viewModel: SearchViewModel { get set }
 }
@@ -29,9 +16,6 @@ class SearchViewController: UIViewController, SearchView {
     
     @IBOutlet private var tableView: UITableView!
     @IBOutlet private var searchBar: UISearchBar!
-    @IBOutlet private var noDataLabel: UILabel!
-    
-    var state: State = .initial { didSet { render() } }
     
     var viewModel = SearchViewModel(
         worker: SearchWorker(
@@ -70,19 +54,6 @@ class SearchViewController: UIViewController, SearchView {
 
 }
 
-//MARK: - Render UI State
-
-private extension SearchViewController {
-    func render() {
-        switch state {
-        case .initial:
-            noDataLabel.isHidden = true
-        case .search(let data):
-            noDataLabel.isHidden = !data.isEmpty
-        }
-    }
-}
-
 //MARK: - TableView DataSource
 
 extension SearchViewController: UITableViewDataSource {
@@ -114,6 +85,5 @@ extension SearchViewController: UITableViewDelegate {
 extension SearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         viewModel.performSearch(searchText: searchText)
-        state.change(on: .search(viewModel.searchResult))
     }
 }
